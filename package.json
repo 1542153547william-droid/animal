@@ -1,0 +1,11 @@
+{
+  "name": "mengpet-town",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "萌宠小镇 · 虚拟宠物养成（前后端分离版，Vercel 部署）",
+  "scripts": {
+    "dev": "node dev-server.js",
+    "start": "node dev-server.js"
+  }
+}

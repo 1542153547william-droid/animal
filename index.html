@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏡 萌宠小镇 · 虚拟宠物养成</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="app">
+    <div id="banner" class="banner hidden"></div>
+    <header class="topbar">
+      <h1>🏡 萌宠小镇</h1>
+      <p class="subtitle">养一只属于你的小镇萌宠 · MVP 骨架</p>
+    </header>
+
+    <!-- 小镇背景装饰 -->
+    <div class="town" aria-hidden="true">
+      <span>🌳</span><span>🏠</span><span>🌸</span><span>⛲</span><span>🌲</span><span>🏪</span>
+    </div>
+
+    <!-- 宠物卡片 -->
+    <section class="pet-card">
+      <div class="pet-avatar" id="petAvatar">🐱</div>
+      <div class="pet-meta">
+        <input id="petName" class="pet-name" maxlength="12" value="小喵" />
+        <div class="pet-level">等级 <span id="petLevel">1</span> · 已照顾 <span id="careCount">0</span> 次</div>
+        <div class="pet-mood" id="petMood">心情不错～</div>
+      </div>
+    </section>
+
+    <!-- 状态条 -->
+    <section class="stats">
+      <div class="stat">
+        <label>🍚 饱食度</label>
+        <div class="bar"><span id="barSatiety" class="fill satiety"></span></div>
+      </div>
+      <div class="stat">
+        <label>😊 心情</label>
+        <div class="bar"><span id="barHappiness" class="fill happiness"></span></div>
+      </div>
+      <div class="stat">
+        <label>⚡ 精力</label>
+        <div class="bar"><span id="barEnergy" class="fill energy"></span></div>
+      </div>
+    </section>
+
+    <!-- 操作按钮 -->
+    <section class="actions">
+      <button id="btnFeed" class="btn feed">🍖 喂食</button>
+      <button id="btnPlay" class="btn play">🎾 玩耍</button>
+      <button id="btnSleep" class="btn sleep">😴 睡觉</button>
+      <button id="btnReset" class="btn reset">🔄 重置</button>
+    </section>
+
+    <footer class="foot">
+      <span>状态与逻辑均在后端（/api/pet），前端只负责展示。架构说明见 README。</span>
+    </footer>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
