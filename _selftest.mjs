@@ -128,6 +128,27 @@ console.log('8) 跨请求持久（同一 petId）');
 g = await get();
 check('二次 GET 保留状态', g.json.pet.name === '旺财' && g.json.pet.adopted === true);
 
+console.log('8.5) 口味偏好 + 小游戏');
+// 重领一只兔子，便于验证随机口味
+r = await post('reset');
+r = await post('adopt', { species: 'rabbit', name: '草泥兔' });
+check('领养生成最爱食物', !!(r.json.pet.favFood && r.json.pet.favFood.name), JSON.stringify(r.json.pet.favFood));
+check('最爱加成 20~35', r.json.pet.favBonus >= 20 && r.json.pet.favBonus <= 35, `(=${r.json.pet.favBonus})`);
+let g0 = r.json.pet.gold;
+r = await post('game', { game: 'fishing', score: 100 });
+check('钓鱼满分 +50 金币 +5 经验', r.json.pet.gold === g0 + 50 && r.json.pet.xp === 5, `(gold=${r.json.pet.gold}, xp=${r.json.pet.xp})`);
+r = await post('game', { game: 'food', score: 100 });
+check('接食物满分 +50 饱食(封顶100)', r.json.pet.satiety === 100, `(=${r.json.pet.satiety})`);
+let hap0 = r.json.pet.happiness;
+r = await post('game', { game: 'chase', score: 100 });
+check('逗宠满分 +50 心情(封顶100)', r.json.pet.happiness === 100, `(=${r.json.pet.happiness})`);
+check('三游戏记入 gamesPlayed', ['fishing', 'food', 'chase'].every(x => r.json.pet.gamesPlayed.includes(x)));
+check('成就 game_master 解锁', r.json.pet.achievements.includes('game_master'));
+let tg = r.json.pet.tasks.find(t => t.id === 'game1');
+check('任务 game1 进度=1', !!tg && tg.progress === 1);
+let st2 = await postStatus('game', { game: 'chess' });
+check('未知游戏 400', st2 === 400);
+
 console.log('9) 重置');
 r = await post('reset');
 check('重置后未领养', r.json.pet.adopted === false);

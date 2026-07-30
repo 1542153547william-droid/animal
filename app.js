@@ -7,6 +7,8 @@ let CATALOG = { species: [], scenes: [], shop: [], achievements: [] };
 let state = null;
 let currentLoc = 'home';
 let tasksOpen = false;
+let gameActive = false;          // 小游戏进行中时，阻止自动刷新重渲染打断游戏
+let gameTimers = [];             // 当前小游戏的所有定时器，退出时统一清理
 
 // —— 工具 ——
 const clamp = (v) => Math.max(0, Math.min(100, v));
@@ -44,7 +46,8 @@ function playCareEffect(action) {
   setTimeout(() => spr.classList.remove(fx.react), 950);
   const f = document.createElement('div');
   f.className = 'fx-float';
-  f.textContent = fx.emoji;
+  // 喂食漂浮的是宠物最爱的食物图标
+  f.textContent = action === 'feed' && state?.favFood ? state.favFood.emoji : fx.emoji;
   spr.parentElement.appendChild(f);
   setTimeout(() => f.remove(), 1000);
 }
@@ -89,6 +92,7 @@ function renderPetSprite(s) {
 function renderHome(s) {
   const mood = moodOf(s);
   $('petMood').textContent = mood.text;
+  $('petFav').textContent = s.favFood ? `🍽️ 最爱：${s.favFood.emoji} ${s.favFood.name}` : '';
   $('petName').value = s.name;
   $('petLevel').textContent = petLevelOf(s);
   $('careCount').textContent = s.careCount;
@@ -269,6 +273,166 @@ function renderCurrent() {
   else if (currentLoc === 'park') renderPark(state);
   else if (currentLoc === 'shop') renderShop(state);
   else if (currentLoc === 'dress') renderDress(state);
+  else if (currentLoc === 'game') renderGame(state);
+}
+
+// —— 渲染：小游戏 ——
+function renderGame(s) {
+  if (gameActive) return;           // 游戏中不被自动刷新打断
+  $('gamePlay').innerHTML = '';
+  $('gameCards').classList.remove('hidden');
+  $('gameHint').textContent = '';
+}
+
+function clearGameTimers() {
+  gameTimers.forEach(t => { try { clearInterval(t); } catch {} });
+  gameTimers = [];
+}
+function quitGame() {
+  clearGameTimers();
+  gameActive = false;
+  $('gamePlay').innerHTML = '';
+  $('gameCards').classList.remove('hidden');
+  $('gameHint').textContent = '';
+}
+async function endGame(game, score) {
+  clearGameTimers();
+  gameActive = false;
+  const MAP = { fishing:{ n:'钓鱼', u:'金币' }, food:{ n:'接食物', u:'饱食' }, chase:{ n:'逗宠追逐', u:'心情' } };
+  const g = MAP[game] || { n:'', u:'' };
+  const reward = Math.round(score / 2);
+  showBanner(`🎮 ${g.n}结束！得分 ${score}，获得 ${reward} ${g.u}`);
+  $('gamePlay').innerHTML = '';
+  $('gameCards').classList.remove('hidden');
+  $('gameHint').textContent = '';
+  await doAct('game', { game, score });
+}
+
+// 钓鱼：把握时机收杆，满分 100 → +50 金币
+function startFishing() {
+  gameActive = true;
+  $('gameCards').classList.add('hidden');
+  const play = $('gamePlay');
+  play.innerHTML = `
+    <div class="game-box">
+      <div class="game-hint">鱼漂在滑动，在<b>绿色区域</b>点「收杆」得分最高！</div>
+      <div class="fish-track"><div class="fish-sweet"></div><div class="fish-bob" id="fishBob">🐟</div></div>
+      <div class="game-score">得分：<b id="fishScore">0</b></div>
+      <div class="actions"><button class="btn play" id="fishReel">🎣 收杆</button><button class="btn reset" id="fishQuit">退出</button></div>
+    </div>`;
+  let pos = 0, dir = 1;
+  const bob = $('fishBob');
+  const tick = () => {
+    pos += dir * 3.2;
+    if (pos >= 100) { pos = 100; dir = -1; }
+    if (pos <= 0) { pos = 0; dir = 1; }
+    bob.style.left = `calc(${pos}% - 16px)`;
+  };
+  const t = setInterval(tick, 28);
+  gameTimers.push(t);
+  $('fishReel').addEventListener('click', () => {
+    clearInterval(t); gameTimers = gameTimers.filter(x => x !== t);
+    const score = Math.max(0, Math.min(100, Math.round(100 - Math.abs(pos - 50) * 2)));
+    $('fishScore').textContent = score;
+    endGame('fishing', score);
+  });
+  $('fishQuit').addEventListener('click', quitGame);
+}
+
+// 接食物：移动碗接住掉落食物，15 秒，每接 1 个 +10 分 → 满分 +50 饱食
+function startCatch() {
+  gameActive = true;
+  $('gameCards').classList.add('hidden');
+  const play = $('gamePlay');
+  play.innerHTML = `
+    <div class="game-box">
+      <div class="game-hint">移动下方🥣接住掉落的食物！限时 15 秒</div>
+      <div class="catch-field" id="catchField"><div class="catcher" id="catcher">🥣</div></div>
+      <div class="game-score">接住：<b id="catchNum">0</b> · 剩余：<b id="catchTime">15</b>s</div>
+      <button class="btn reset" id="catchQuit">退出</button>
+    </div>`;
+  const field = $('catchField');
+  const catcher = $('catcher');
+  const foods = ['🍖','🍎','🥕','🐟','🍗','🥩'];
+  let catches = 0, time = 15;
+  const move = (e) => {
+    const r = field.getBoundingClientRect();
+    let x = ((e.clientX - r.left) / r.width) * 100;
+    x = Math.max(8, Math.min(92, x));
+    catcher.style.left = `calc(${x}% - 18px)`;
+  };
+  field.addEventListener('pointermove', move);
+  const spawnT = setInterval(() => {
+    const f = document.createElement('div');
+    f.className = 'falling-food';
+    f.textContent = foods[Math.floor(Math.random() * foods.length)];
+    f.style.left = (10 + Math.random() * 80) + '%';
+    f.style.top = '0px';
+    field.appendChild(f);
+    let y = 0;
+    const fall = setInterval(() => {
+      y += 6; f.style.top = y + 'px';
+      const fr = field.getBoundingClientRect(), fh = fr.height;
+      const cr = catcher.getBoundingClientRect(), frr = f.getBoundingClientRect();
+      if (frr.bottom >= cr.top - 6 && frr.bottom <= cr.bottom + 6 &&
+          Math.abs((frr.left + frr.width / 2) - (cr.left + cr.width / 2)) < 26) {
+        catches++; $('catchNum').textContent = catches;
+        clearInterval(fall); f.remove();
+      } else if (y > fh - 10) { clearInterval(fall); f.remove(); }
+    }, 24);
+    gameTimers.push(fall);
+  }, 750);
+  gameTimers.push(spawnT);
+  const clock = setInterval(() => {
+    time--; $('catchTime').textContent = time;
+    if (time <= 0) { clearInterval(clock); endGame('food', Math.min(100, catches * 10)); }
+  }, 1000);
+  gameTimers.push(clock);
+  $('catchQuit').addEventListener('click', quitGame);
+}
+
+// 逗宠追逐：点中乱跑萌宠，10 秒，每点 1 次 +10 分 → 满分 +50 心情
+function startChase() {
+  gameActive = true;
+  $('gameCards').classList.add('hidden');
+  const play = $('gamePlay');
+  const emoji = speciesEmoji(state);
+  play.innerHTML = `
+    <div class="game-box">
+      <div class="game-hint">点中乱跑的小萌宠！限时 10 秒</div>
+      <div class="chase-field" id="chaseField"><div class="chase-pet" id="chasePet">${emoji}</div></div>
+      <div class="game-score">得分：<b id="chaseNum">0</b> · 剩余：<b id="chaseTime">10</b>s</div>
+      <button class="btn reset" id="chaseQuit">退出</button>
+    </div>`;
+  const field = $('chaseField');
+  const pet = $('chasePet');
+  let taps = 0, time = 10;
+  const hop = () => {
+    const r = field.getBoundingClientRect();
+    pet.style.left = (Math.random() * (r.width - 44)) + 'px';
+    pet.style.top = (Math.random() * (r.height - 44)) + 'px';
+  };
+  hop();
+  const mover = setInterval(hop, 650);
+  gameTimers.push(mover);
+  pet.addEventListener('click', (e) => {
+    e.stopPropagation();
+    taps++; $('chaseNum').textContent = taps;
+    pet.classList.remove('tap'); void pet.offsetWidth; pet.classList.add('tap');
+    hop();
+  });
+  const clock = setInterval(() => {
+    time--; $('chaseTime').textContent = time;
+    if (time <= 0) { clearInterval(clock); endGame('chase', Math.min(100, taps * 10)); }
+  }, 1000);
+  gameTimers.push(clock);
+  $('chaseQuit').addEventListener('click', quitGame);
+}
+
+function startGame(g) {
+  if (g === 'fishing') startFishing();
+  else if (g === 'food') startCatch();
+  else if (g === 'chase') startChase();
 }
 
 // —— 地点切换（PPT 式转场 + 宠物进场景）——
@@ -335,6 +499,8 @@ $('stage').addEventListener('click', (e) => {
   }
   const visBtn = e.target.closest('[data-visit]');
   if (visBtn) { doAct('visit', { scene: visBtn.dataset.visit }); return; }
+  const gameBtn = e.target.closest('[data-game]');
+  if (gameBtn) { if (!gameActive) startGame(gameBtn.dataset.game); return; }
 });
 
 $('btnAdopt').addEventListener('click', async () => {

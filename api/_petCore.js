@@ -12,9 +12,9 @@ import { store } from './_store.js';
 
 // —— 物种目录（前端只读，从 catalog 获取）——
 export const SPECIES = {
-  cat:    { key:'cat',    name:'小猫',   emoji:'🐱', personality:'高冷傲娇', desc:'心情细腻、精力恢复慢、较独立',  decay:{ satiety:0.9, cleanliness:0.7, happiness:0.8, health:0.20 } },
-  dog:    { key:'dog',    name:'小狗',   emoji:'🐶', personality:'活泼忠诚', desc:'贪吃、饭量大消耗快、精力恢复快', decay:{ satiety:1.3, cleanliness:1.1, happiness:0.6, health:0.20 } },
-  rabbit: { key:'rabbit', name:'小兔子', emoji:'🐰', personality:'胆小温柔', desc:'心情敏感易波动、需温柔陪伴',     decay:{ satiety:1.0, cleanliness:1.2, happiness:1.1, health:0.25 } },
+  cat:    { key:'cat',    name:'小猫',   emoji:'🐱', personality:'高冷傲娇', desc:'心情细腻、精力恢复慢、较独立',  decay:{ satiety:0.9, cleanliness:0.7, happiness:0.8, health:0.20 }, foods:[{name:'猫粮',emoji:'🥣'},{name:'小鱼干',emoji:'🐟'},{name:'三文鱼',emoji:'🍣'},{name:'鸡胸肉',emoji:'🍗'}] },
+  dog:    { key:'dog',    name:'小狗',   emoji:'🐶', personality:'活泼忠诚', desc:'贪吃、饭量大消耗快、精力恢复快', decay:{ satiety:1.3, cleanliness:1.1, happiness:0.6, health:0.20 }, foods:[{name:'肉狗粮',emoji:'🦴'},{name:'排骨',emoji:'🍖'},{name:'鸡肉',emoji:'🍗'},{name:'牛肉',emoji:'🥩'}] },
+  rabbit: { key:'rabbit', name:'小兔子', emoji:'🐰', personality:'胆小温柔', desc:'心情敏感易波动、需温柔陪伴',     decay:{ satiety:1.0, cleanliness:1.2, happiness:1.1, health:0.25 }, foods:[{name:'提摩西草',emoji:'🌿'},{name:'苜蓿草',emoji:'🌱'},{name:'蒲公英草',emoji:'🍃'},{name:'胡萝卜',emoji:'🥕'}] },
 };
 
 // —— 小镇四场景 ——
@@ -43,6 +43,7 @@ const TASK_DEFS = [
   { id:'play2',  desc:'玩耍 2 次',   goal:2, type:'play',  reward:{ gold:15 } },
   { id:'bathe1', desc:'洗澡 1 次',   goal:1, type:'bathe', reward:{ gold:10 } },
   { id:'park1',  desc:'去公园 1 次', goal:1, type:'park',  reward:{ gold:15 } },
+  { id:'game1',  desc:'玩一次小游戏', goal:1, type:'game',  reward:{ gold:10 } },
 ];
 
 // —— 成就定义（check 在后端统一判定，奖励自动发放）——
@@ -52,6 +53,7 @@ export const ACHIEVEMENTS = [
   { id:'lv5',            name:'资深饲养员', desc:'用户等级达到 5 级',        reward:{ diamond:10 }, check:(s)=> s.level>=5 },
   { id:'first_furniture',name:'小窝布置',   desc:'拥有第一件家具',          reward:{ token:2 },    check:(s)=> s.equipped.furniture!=null || Object.keys(s.inventory).some(k=>SHOP[k]&&SHOP[k].type==='furniture') },
   { id:'rich',           name:'小富翁',     desc:'持有 100 金币',           reward:{ token:1 },    check:(s)=> s.gold>=100 },
+  { id:'game_master',    name:'游戏达人',   desc:'体验全部三种小游戏',      reward:{ token:3 },    check:(s)=> ['fishing','food','chase'].every(x=>(s.gamesPlayed||[]).includes(x)) },
 ];
 
 // —— 工具函数 ——
@@ -74,10 +76,14 @@ function fresh(petId) {
     gold: 50, diamond: 0, token: 0,
     inventory: {},                      // itemId -> count
     equipped: { clothing: null, furniture: null },
+    // 口味偏好（领养时随机生成，体现每只宠物的独一无二）
+    favFood: null,                      // { name, emoji }
+    favBonus: 20,                       // 喂最爱食物时的额外饱食加成
     // 用户等级
     xp: 0, level: 1,
     // 场景 & 任务
     visitedScenes: [],
+    gamesPlayed: [],                   // 玩过的小游戏 id 集合
     taskDate: todayStr(),
     tasks: genTasks(),
     achievements: [],
@@ -172,17 +178,34 @@ export async function handlePet({ method, query = {}, body = {} }) {
       s.adopted = true;
       s.species = sp.key;
       s.name = String(body.name || '').trim().slice(0, 12) || '小宠';
+      // 随机生成这只宠物独一无二的饮食偏好
+      const foods = SPECIES[sp.key].foods;
+      s.favFood = foods[Math.floor(Math.random() * foods.length)];
+      s.favBonus = 20 + Math.floor(Math.random() * 16); // 20~35
     } else if (!s.adopted) {
       return { status:400, json:{ ok:false, error:'not adopted' } };
     }
     // —— 日常互动 ——
-    else if (action === 'feed')  { s.satiety=clamp(s.satiety+20); s.careCount++; gainXp(s,5); earn(s,1); bumpTask(s,'feed'); }
+    else if (action === 'feed')  { s.satiety=clamp(s.satiety+(s.favBonus||20)); s.happiness=clamp(s.happiness+5); s.careCount++; gainXp(s,5); earn(s,1); bumpTask(s,'feed'); }
     else if (action === 'play')  { s.happiness=clamp(s.happiness+15); s.satiety=clamp(s.satiety-5); s.cleanliness=clamp(s.cleanliness-3); s.careCount++; gainXp(s,5); earn(s,1); bumpTask(s,'play'); }
     else if (action === 'bathe') { s.cleanliness=clamp(s.cleanliness+25); s.careCount++; gainXp(s,5); earn(s,1); bumpTask(s,'bathe'); }
     else if (action === 'sleep') { s.health=clamp(s.health+15); s.satiety=clamp(s.satiety-3); s.careCount++; gainXp(s,5); earn(s,1); }
     else if (action === 'heal')  { if (s.sick){ s.sick=false; s.health=clamp(s.health+30); } else { s.health=clamp(s.health+10); } s.careCount++; gainXp(s,3); }
     else if (action === 'rename'){ s.name = String(body.name || '').trim().slice(0, 12) || '小宠'; }
     else if (action === 'reset') { s = fresh(petId); }
+    // —— 小游戏（奖励走后端，保持唯一真相源）——
+    else if (action === 'game') {
+      const GM = { fishing:'fishing', food:'food', chase:'chase' };
+      const g = GM[String(body.game)];
+      if (!g) return { status:400, json:{ ok:false, error:'unknown game' } };
+      const score = Math.max(0, Math.min(100, Math.round(Number(body.score) || 0)));
+      if (g === 'fishing')      { earn(s, Math.round(score/2)); gainXp(s,5); }                                   // 金币
+      else if (g === 'food')    { s.satiety = clamp(s.satiety + Math.round(score/2)); gainXp(s,3); }             // 饱食
+      else if (g === 'chase')   { s.happiness = clamp(s.happiness + Math.round(score/2)); gainXp(s,5); }         // 心情
+      s.gamesPlayed = s.gamesPlayed || [];
+      if (!s.gamesPlayed.includes(g)) s.gamesPlayed.push(g);
+      bumpTask(s, 'game');
+    }
     // —— 小镇场景 ——
     else if (action === 'visit') {
       const sc = String(body.scene);

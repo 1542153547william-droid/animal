@@ -45,6 +45,7 @@
       <button class="loc" data-loc="park">🌳 公园</button>
       <button class="loc" data-loc="shop">🛒 商店</button>
       <button class="loc" data-loc="dress">🎀 装扮</button>
+      <button class="loc" data-loc="game">🎮 游戏</button>
     </nav>
 
     <!-- 场景舞台 -->
@@ -58,6 +59,7 @@
           <input id="petName" class="pet-name" maxlength="12" value="小喵" />
           <div class="pet-level">亲密度 Lv.<span id="petLevel">1</span> · 已照顾 <span id="careCount">0</span> 次</div>
           <div class="pet-mood" id="petMood">心情不错～</div>
+          <div class="pet-fav" id="petFav"></div>
           <div class="room" id="room"></div>
         </div>
         <section class="stats">
@@ -137,6 +139,36 @@
         <h3 class="sub-sec">🛏️ 房间布置（拖动家具）</h3>
         <div id="roomCanvas" class="room-canvas"></div>
         <div class="hint" id="dressHint"></div>
+      </section>
+
+      <!-- 🎮 游戏 -->
+      <section class="loc-view hidden" id="loc-game">
+        <div class="scene-bg game-bg"><span>🎮</span><span>🎯</span><span>🏆</span><span>🎲</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🎮 萌宠小游戏</div>
+        <p class="loc-desc">陪宠物玩小游戏，赢金币 / 饱食 / 心情～</p>
+        <div class="game-cards" id="gameCards">
+          <div class="game-card">
+            <div class="g-emoji">🎣</div>
+            <div class="g-name">钓鱼</div>
+            <div class="g-desc">把握时机收杆，赚金币</div>
+            <button class="btn small play" data-game="fishing">开始</button>
+          </div>
+          <div class="game-card">
+            <div class="g-emoji">🥣</div>
+            <div class="g-name">接食物</div>
+            <div class="g-desc">接住掉落食物，涨饱食</div>
+            <button class="btn small feed" data-game="food">开始</button>
+          </div>
+          <div class="game-card">
+            <div class="g-emoji">🐾</div>
+            <div class="g-name">逗宠追逐</div>
+            <div class="g-desc">点中乱跑萌宠，涨心情</div>
+            <button class="btn small sleep" data-game="chase">开始</button>
+          </div>
+        </div>
+        <div id="gamePlay"></div>
+        <div class="hint" id="gameHint"></div>
       </section>
 
     <!-- 任务 / 成就 面板（模态） -->
