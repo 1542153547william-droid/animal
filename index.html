@@ -44,6 +44,7 @@
       <button class="loc" data-loc="school">🏫 学校</button>
       <button class="loc" data-loc="park">🌳 公园</button>
       <button class="loc" data-loc="shop">🛒 商店</button>
+      <button class="loc" data-loc="dress">🎀 装扮</button>
     </nav>
 
     <!-- 场景舞台 -->
@@ -124,6 +125,19 @@
       </section>
 
     </div>
+
+      <!-- 🎀 装扮间 -->
+      <section class="loc-view hidden" id="loc-dress">
+        <div class="scene-bg dress-bg"><span>🎀</span><span>👗</span><span>🪞</span><span>🛏️</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🎀 装扮间</div>
+        <p class="loc-desc">给宠物换装，并把家具拖到房间里摆好～</p>
+        <h3 class="sub-sec">👗 我的衣橱</h3>
+        <div id="wardrobe" class="inv-grid"></div>
+        <h3 class="sub-sec">🛏️ 房间布置（拖动家具）</h3>
+        <div id="roomCanvas" class="room-canvas"></div>
+        <div class="hint" id="dressHint"></div>
+      </section>
 
     <!-- 任务 / 成就 面板（模态） -->
     <section id="taskPanel" class="panel hidden">

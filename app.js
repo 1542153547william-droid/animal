@@ -115,6 +115,74 @@ function renderPark(s) {
   $('parkHint').textContent = s.visitedScenes?.includes('park') ? '✅ 已到访过公园' : '';
 }
 
+// —— 渲染：装扮间（换装 + 房间家具拖拽）——
+function roomKey() { return 'mengpet_room_' + (localStorage.getItem('mengpet_id') || 'x'); }
+function loadLayout() { try { return JSON.parse(localStorage.getItem(roomKey()) || '{}'); } catch { return {}; } }
+function saveLayout(id, x, y) { const l = loadLayout(); l[id] = { x, y }; localStorage.setItem(roomKey(), JSON.stringify(l)); }
+
+function renderDress(s) {
+  const w = $('wardrobe');
+  w.innerHTML = '';
+  const items = Object.entries(s.inventory).filter(([, n]) => n > 0)
+    .map(([id]) => shopItem(id)).filter(it => it && (it.type === 'clothing' || it.type === 'furniture'));
+  if (items.length === 0) { w.innerHTML = '<p class="empty">还没有服饰/家具，去🛒商店逛逛吧～</p>'; }
+  else {
+    items.forEach(it => {
+      const equipped = s.equipped[it.type === 'clothing' ? 'clothing' : 'furniture'] === it.id;
+      const el = document.createElement('div');
+      el.className = 'inv-card';
+      el.innerHTML = `<span>${it.icon} ${it.name}</span><button class="btn small ${equipped ? 'reset' : 'feed'}" data-equip="${it.id}">${equipped ? '卸下' : '装备'}</button>`;
+      el.querySelector('[data-equip]').addEventListener('click', async () => { await doAct('equip', { itemId: it.id }); renderDress(state); });
+      w.appendChild(el);
+    });
+  }
+  renderRoom(s);
+}
+
+function renderRoom(s) {
+  const canvas = $('roomCanvas');
+  canvas.innerHTML = '';
+  const ownedFurn = Object.entries(s.inventory).filter(([id, n]) => n > 0 && shopItem(id)?.type === 'furniture').map(([id]) => id);
+  if (ownedFurn.length === 0) { canvas.innerHTML = '<p class="empty">暂无家具，去商店买一个吧～</p>'; $('dressHint').textContent = ''; return; }
+  const layout = loadLayout();
+  ownedFurn.forEach(id => {
+    const it = shopItem(id);
+    const d = document.createElement('div');
+    d.className = 'furniture-item';
+    d.textContent = it.icon;
+    d.dataset.id = id;
+    const pos = layout[id] || { x: 16 + Math.random() * 120, y: 16 + Math.random() * 50 };
+    d.style.left = pos.x + 'px';
+    d.style.top = pos.y + 'px';
+    makeDraggable(d, id);
+    canvas.appendChild(d);
+  });
+  $('dressHint').textContent = '已装备的家具会出现在这里，按住拖动即可摆放';
+}
+
+function makeDraggable(el, id) {
+  el.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const canvas = el.parentElement;
+    const rect = canvas.getBoundingClientRect();
+    const startX = e.clientX, startY = e.clientY;
+    const ox = parseFloat(el.style.left) || 0, oy = parseFloat(el.style.top) || 0;
+    const move = (ev) => {
+      let nx = ox + (ev.clientX - startX), ny = oy + (ev.clientY - startY);
+      nx = Math.max(0, Math.min(nx, rect.width - 36));
+      ny = Math.max(0, Math.min(ny, rect.height - 36));
+      el.style.left = nx + 'px'; el.style.top = ny + 'px';
+    };
+    const up = () => {
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', up);
+      saveLayout(id, parseFloat(el.style.left), parseFloat(el.style.top));
+    };
+    document.addEventListener('pointermove', move);
+    document.addEventListener('pointerup', up);
+  });
+}
+
 // —— 渲染：商城 ——
 function renderShop() {
   const grid = $('shopGrid');
@@ -200,6 +268,7 @@ function renderCurrent() {
   else if (currentLoc === 'school') renderSchool(state);
   else if (currentLoc === 'park') renderPark(state);
   else if (currentLoc === 'shop') renderShop(state);
+  else if (currentLoc === 'dress') renderDress(state);
 }
 
 // —— 地点切换（PPT 式转场 + 宠物进场景）——

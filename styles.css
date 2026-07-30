@@ -474,3 +474,15 @@ body {
   60%  { transform: translateX(-4px); }
   100% { transform: none; }
 }
+
+/* —— 装扮间：房间画布 + 家具拖拽 —— */
+.room-canvas {
+  position: relative; min-height: 180px;
+  background: repeating-linear-gradient(45deg, #fff8f2, #fff8f2 12px, #fdf0e6 12px, #fdf0e6 24px);
+  border: 2px dashed #f0e7df; border-radius: 14px; margin-top: 6px; overflow: hidden;
+}
+.furniture-item {
+  position: absolute; font-size: 32px; cursor: grab;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15)); user-select: none; touch-action: none;
+}
+.furniture-item:active { cursor: grabbing; }
