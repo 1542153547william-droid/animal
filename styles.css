@@ -359,3 +359,74 @@ body {
 .btn.small { padding: 8px 14px; font-size: 13px; }
 .btn.school { background: #f0a868; }
 .btn.disabled, .btn:disabled { opacity: 0.45; cursor: not-allowed; filter: none; }
+
+/* —— 任务按钮（右上） —— */
+.tasks-bar { text-align: right; margin: 0 0 4px; }
+.pill {
+  border: none; background: #ffe0a3; color: #6b4f2a;
+  border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.pill:hover { filter: brightness(1.04); }
+
+/* —— 地点常驻导航 —— */
+.locationbar { display: flex; gap: 6px; margin: 10px 0 8px; }
+.loc {
+  flex: 1; border: none; background: #f5ece3; color: var(--muted);
+  border-radius: 12px; padding: 9px 0; font-size: 12px; font-weight: 700;
+  font-family: inherit; cursor: pointer; transition: all 0.15s ease;
+}
+.loc.active { background: #ffd9a0; color: #6b4f2a; }
+.loc:hover { filter: brightness(1.03); }
+
+/* —— 场景舞台 + 转场 —— */
+.stage { position: relative; overflow: hidden; }
+.loc-view { animation: sceneIn 0.42s ease; }
+.loc-view.leaving { animation: sceneOut 0.2s ease forwards; }
+@keyframes sceneIn {
+  from { opacity: 0; transform: translateX(36px) scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes sceneOut {
+  to { opacity: 0; transform: translateX(-24px); }
+}
+
+/* 场景背景装饰 */
+.scene-bg { display: flex; justify-content: space-around; font-size: 22px; opacity: 0.85; margin: 8px 0 4px; }
+
+/* 宠物精灵 + 进场景动画 */
+.pet-sprite {
+  font-size: 64px; text-align: center; line-height: 1.1;
+  filter: drop-shadow(0 6px 8px rgba(0,0,0,0.12)); margin: 4px 0;
+}
+.pet-sprite.enter { animation: petEnter 0.6s cubic-bezier(.34,1.56,.64,1); }
+.pet-sprite.hop.enter { animation: petHop 0.7s ease; }
+@keyframes petEnter {
+  0%   { transform: translateX(-50px) scale(0.8); opacity: 0; }
+  60%  { transform: translateX(6px) scale(1.06); opacity: 1; }
+  100% { transform: none; }
+}
+@keyframes petHop {
+  0%   { transform: translateX(-50px); opacity: 0; }
+  40%  { transform: translateX(0) translateY(-22px); opacity: 1; }
+  70%  { transform: translateY(0); }
+  100% { transform: none; }
+}
+
+.pet-meta-bar { text-align: center; margin: 4px 0 8px; }
+.loc-title { text-align: center; font-weight: 700; font-size: 16px; margin: 6px 0; }
+.loc-desc { text-align: center; font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+.hint { text-align: center; font-size: 12px; color: #7ec96b; font-weight: 700; margin-top: 8px; min-height: 14px; }
+
+/* —— 任务面板（模态） —— */
+.panel {
+  position: fixed; inset: 0; background: rgba(74,64,57,0.45);
+  display: flex; align-items: flex-end; justify-content: center; z-index: 50;
+}
+.panel.hidden { display: none; }
+.panel-inner {
+  background: #fff; width: 100%; max-width: 420px; max-height: 82vh; overflow: auto;
+  border-radius: 20px 20px 0 0; padding: 20px;
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.panel-head h2 { margin: 0; font-size: 17px; }

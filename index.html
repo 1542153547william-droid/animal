@@ -15,20 +15,15 @@
       <p class="subtitle">养一只属于你的小镇萌宠</p>
     </header>
 
-    <!-- 顶部导航 -->
-    <nav class="tabbar" id="tabbar">
-      <button class="tab active" data-tab="home">🏠 家</button>
-      <button class="tab" data-tab="town">🏘️ 小镇</button>
-      <button class="tab" data-tab="shop">🛒 商城</button>
-      <button class="tab" data-tab="tasks">📋 任务</button>
-    </nav>
-
     <!-- 钱包栏 -->
     <div class="wallet" id="wallet">
       <span>💰 <b id="gold">0</b></span>
       <span>💎 <b id="diamond">0</b></span>
       <span>🪙 <b id="token">0</b></span>
-      <span class="lv">用户 Lv.<b id="ulevel">1</b></span>
+      <span class="lv">Lv.<b id="ulevel">1</b></span>
+    </div>
+    <div class="tasks-bar">
+      <button id="btnTasks" class="pill">📋 任务 / 成就</button>
     </div>
 
     <!-- 领养屏 -->
@@ -42,57 +37,105 @@
       <button id="btnAdopt" class="btn adopt">确认领养 🏡</button>
     </section>
 
-    <!-- 家（养成） -->
-    <section id="view-home" class="view hidden">
-      <div class="town" aria-hidden="true">
-        <span>🌳</span><span>🏠</span><span>🌸</span><span>⛲</span><span>🌲</span><span>🏪</span>
-      </div>
-      <section class="pet-card">
-        <div class="pet-avatar" id="petAvatar">🐱</div>
-        <div class="pet-meta">
+    <!-- 地点导航（常驻） -->
+    <nav class="locationbar hidden" id="locationbar">
+      <button class="loc active" data-loc="home">🏠 家</button>
+      <button class="loc" data-loc="hospital">🏥 医院</button>
+      <button class="loc" data-loc="school">🏫 学校</button>
+      <button class="loc" data-loc="park">🌳 公园</button>
+      <button class="loc" data-loc="shop">🛒 商店</button>
+    </nav>
+
+    <!-- 场景舞台 -->
+    <div id="stage" class="stage hidden">
+
+      <!-- 🏠 家：养成照料 -->
+      <section class="loc-view" id="loc-home">
+        <div class="scene-bg home-bg"><span>🌳</span><span>🏠</span><span>🌸</span><span>⛲</span><span>🌲</span><span>🏪</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="pet-meta-bar">
           <input id="petName" class="pet-name" maxlength="12" value="小喵" />
           <div class="pet-level">亲密度 Lv.<span id="petLevel">1</span> · 已照顾 <span id="careCount">0</span> 次</div>
           <div class="pet-mood" id="petMood">心情不错～</div>
           <div class="room" id="room"></div>
         </div>
+        <section class="stats">
+          <div class="stat"><label>🍚 饱食度</label><div class="bar"><span id="barSatiety" class="fill satiety"></span></div></div>
+          <div class="stat"><label>🛁 清洁度</label><div class="bar"><span id="barCleanliness" class="fill cleanliness"></span></div></div>
+          <div class="stat"><label>😊 心情</label><div class="bar"><span id="barHappiness" class="fill happiness"></span></div></div>
+          <div class="stat"><label>❤️ 健康度</label><div class="bar"><span id="barHealth" class="fill health"></span></div></div>
+        </section>
+        <section class="actions">
+          <button id="btnFeed" class="btn feed">🍖 喂食</button>
+          <button id="btnPlay" class="btn play">🎾 玩耍</button>
+          <button id="btnBathe" class="btn bathe">🛁 洗澡</button>
+          <button id="btnSleep" class="btn sleep">😴 睡觉</button>
+          <button id="btnHeal" class="btn heal">💊 就医</button>
+          <button id="btnReset" class="btn reset">🔄 放生重领</button>
+        </section>
       </section>
-      <section class="stats">
-        <div class="stat"><label>🍚 饱食度</label><div class="bar"><span id="barSatiety" class="fill satiety"></span></div></div>
-        <div class="stat"><label>🛁 清洁度</label><div class="bar"><span id="barCleanliness" class="fill cleanliness"></span></div></div>
-        <div class="stat"><label>😊 心情</label><div class="bar"><span id="barHappiness" class="fill happiness"></span></div></div>
-        <div class="stat"><label>❤️ 健康度</label><div class="bar"><span id="barHealth" class="fill health"></span></div></div>
+
+      <!-- 🏥 医院 -->
+      <section class="loc-view hidden" id="loc-hospital">
+        <div class="scene-bg hosp-bg"><span>🏥</span><span>💉</span><span>🩺</span><span>🛏️</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🏥 小镇医院</div>
+        <p class="loc-desc" id="hospStatus">为宠物检查身体、治疗疾病。</p>
+        <div class="actions">
+          <button class="btn heal" data-act="heal">💊 就医治疗</button>
+          <button class="btn" data-visit="hospital">📍 到访医院</button>
+        </div>
+        <div class="hint" id="hospHint"></div>
       </section>
-      <section class="actions">
-        <button id="btnFeed" class="btn feed">🍖 喂食</button>
-        <button id="btnPlay" class="btn play">🎾 玩耍</button>
-        <button id="btnBathe" class="btn bathe">🛁 洗澡</button>
-        <button id="btnSleep" class="btn sleep">😴 睡觉</button>
-        <button id="btnHeal" class="btn heal">💊 就医</button>
-        <button id="btnReset" class="btn reset">🔄 放生重领</button>
+
+      <!-- 🏫 学校 -->
+      <section class="loc-view hidden" id="loc-school">
+        <div class="scene-bg school-bg"><span>🏫</span><span>📚</span><span>✏️</span><span>🎓</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🏫 小镇学校</div>
+        <p class="loc-desc">上课训练可增长经验与心情（每次 +15 经验）。</p>
+        <div class="actions">
+          <button class="btn school" data-act="school">📚 上课训练</button>
+          <button class="btn" data-visit="school">📍 到访学校</button>
+        </div>
+        <div class="hint" id="schoolHint"></div>
       </section>
-    </section>
 
-    <!-- 小镇四场景 -->
-    <section id="view-town" class="view hidden">
-      <h2 class="sec-title">🏘️ 小镇地图</h2>
-      <div id="sceneCards" class="scene-grid"></div>
-      <div id="sceneDetail" class="scene-detail hidden"></div>
-    </section>
+      <!-- 🌳 公园 -->
+      <section class="loc-view hidden" id="loc-park">
+        <div class="scene-bg park-bg"><span>🌳</span><span>🌸</span><span>🦋</span><span>⛲</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🌳 小镇公园</div>
+        <p class="loc-desc">散步可愉悦心情、赚金币（每次 +5 金币）。</p>
+        <div class="actions">
+          <button class="btn play" data-visit="park">🌳 去公园散步</button>
+        </div>
+        <div class="hint" id="parkHint"></div>
+      </section>
 
-    <!-- 商城 -->
-    <section id="view-shop" class="view hidden">
-      <h2 class="sec-title">🛒 商城</h2>
-      <div id="shopGrid" class="shop-grid"></div>
-      <h3 class="sub-sec">🎒 我的背包</h3>
-      <div id="inventory" class="inv-grid"></div>
-    </section>
+      <!-- 🛒 商店 -->
+      <section class="loc-view hidden" id="loc-shop">
+        <div class="scene-bg shop-bg"><span>🛒</span><span>🏪</span><span>🎁</span><span>👗</span></div>
+        <div class="pet-sprite" data-sprite>🐱</div>
+        <div class="loc-title">🛒 萌宠商城</div>
+        <div id="shopGrid" class="shop-grid"></div>
+        <h3 class="sub-sec">🎒 我的背包</h3>
+        <div id="inventory" class="inv-grid"></div>
+      </section>
 
-    <!-- 任务 / 成就 -->
-    <section id="view-tasks" class="view hidden">
-      <h2 class="sec-title">📋 每日任务</h2>
-      <div id="taskList" class="task-list"></div>
-      <h3 class="sub-sec">🏆 成就</h3>
-      <div id="achList" class="ach-list"></div>
+    </div>
+
+    <!-- 任务 / 成就 面板（模态） -->
+    <section id="taskPanel" class="panel hidden">
+      <div class="panel-inner">
+        <div class="panel-head">
+          <h2>📋 每日任务 / 成就</h2>
+          <button id="closeTasks" class="pill">✕</button>
+        </div>
+        <div id="taskList" class="task-list"></div>
+        <h3 class="sub-sec">🏆 成就</h3>
+        <div id="achList" class="ach-list"></div>
+      </div>
     </section>
 
     <footer class="foot">

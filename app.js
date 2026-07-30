@@ -1,10 +1,12 @@
 // app.js — 纯视图层：渲染 + 事件，所有数据来自后端 API
+// 体验升级①：场景 PPT 式转场 + 宠物进场景动画 + 地点常驻导航
 import { fetchData, act } from './lib/api.js';
 
 const $ = (id) => document.getElementById(id);
 let CATALOG = { species: [], scenes: [], shop: [], achievements: [] };
-let currentTab = 'home';
-let openScene = null;
+let state = null;
+let currentLoc = 'home';
+let tasksOpen = false;
 
 // —— 工具 ——
 const clamp = (v) => Math.max(0, Math.min(100, v));
@@ -20,6 +22,8 @@ function moodOf(s) {
 const petLevelOf = (s) => Math.floor(s.careCount / 5) + 1;
 const speciesEmoji = (s) => (CATALOG.species.find(x => x.key === s.species) || {}).emoji || '🐱';
 const shopItem = (id) => CATALOG.shop.find(x => x.id === id);
+// 不同物种进场景的动画：兔子跳，猫狗走
+const petAnimClass = (s) => (s.species === 'rabbit' ? 'hop' : 'walk');
 
 // —— 渲染：领养屏 ——
 function renderAdopt() {
@@ -36,91 +40,55 @@ function renderAdopt() {
     card.addEventListener('click', () => {
       document.querySelectorAll('.species-card').forEach(c => c.classList.remove('selected'));
       card.classList.add('selected');
-      card._selected = sp.key;
       window.__selectedSpecies = sp.key;
     });
     wrap.appendChild(card);
   });
 }
 
-// —— 渲染：钱包 + 宠物卡 ——
-function renderHome(s) {
+// —— 渲染：钱包 ——
+function renderWallet(s) {
   $('gold').textContent = s.gold;
   $('diamond').textContent = s.diamond;
   $('token').textContent = s.token;
   $('ulevel').textContent = s.level;
+}
 
-  const mood = moodOf(s);
+// —— 渲染：所有场景里的宠物精灵 ——
+function renderPetSprite(s) {
   const clothing = s.equipped.clothing ? (shopItem(s.equipped.clothing)?.icon || '') : '';
-  $('petAvatar').textContent = speciesEmoji(s) + clothing;
+  const txt = speciesEmoji(s) + clothing;
+  document.querySelectorAll('[data-sprite]').forEach(el => el.textContent = txt);
+}
+
+// —— 渲染：家（养成照料）——
+function renderHome(s) {
+  const mood = moodOf(s);
   $('petMood').textContent = mood.text;
   $('petName').value = s.name;
   $('petLevel').textContent = petLevelOf(s);
   $('careCount').textContent = s.careCount;
-
   $('barSatiety').style.width = s.satiety + '%';
   $('barCleanliness').style.width = s.cleanliness + '%';
   $('barHappiness').style.width = s.happiness + '%';
   $('barHealth').style.width = s.health + '%';
-
-  const btnHeal = $('btnHeal');
-  btnHeal.classList.toggle('urgent', s.sick);
-
+  $('btnHeal').classList.toggle('urgent', s.sick);
   const furniture = s.equipped.furniture ? (shopItem(s.equipped.furniture)?.icon || '') : '';
   $('room').textContent = furniture ? `房间：${furniture}` : '';
 }
 
-// —— 渲染：小镇场景 ——
-function renderTown() {
-  const grid = $('sceneCards');
-  grid.innerHTML = '';
-  CATALOG.scenes.forEach(sc => {
-    const card = document.createElement('div');
-    card.className = 'scene-card';
-    const visited = state.visitedScenes?.includes(sc.key);
-    card.innerHTML = `<div class="sc-emoji">${sc.emoji}</div>
-      <div class="sc-name">${sc.name}</div>
-      <div class="sc-desc">${sc.desc}</div>
-      <div class="sc-flag">${visited ? '✅ 已到访' : '未到访'}</div>`;
-    card.addEventListener('click', () => { openScene = sc.key; renderSceneDetail(); });
-    grid.appendChild(card);
-  });
-  if (openScene) renderSceneDetail();
+// —— 渲染：医院 / 学校 / 公园 ——
+function renderHospital(s) {
+  $('hospStatus').textContent = s.sick
+    ? `当前状态：🤒 生病中，健康度 ${s.health}`
+    : `当前状态：❤️ 健康良好（${s.health}）`;
+  $('hospHint').textContent = s.visitedScenes?.includes('hospital') ? '✅ 已到访过医院' : '';
 }
-
-function renderSceneDetail() {
-  const sc = CATALOG.scenes.find(x => x.key === openScene);
-  const detail = $('sceneDetail');
-  if (!sc) { detail.classList.add('hidden'); return; }
-  detail.classList.remove('hidden');
-  const s = state;
-  let actions = '';
-  if (sc.key === 'hospital') {
-    actions = `<p>当前健康：${s.health} ${s.sick ? '🤒 生病中' : '❤️ 良好'}</p>
-      <button class="btn heal" data-act="heal">💊 就医治疗</button>
-      <button class="btn" data-visit="hospital">📍 到访医院</button>`;
-  } else if (sc.key === 'school') {
-    actions = `<p>上课可增长经验与心情（每次 +15 经验）</p>
-      <button class="btn school" data-act="school">📚 上课训练</button>
-      <button class="btn" data-visit="school">📍 到访学校</button>`;
-  } else if (sc.key === 'park') {
-    actions = `<p>散步可愉悦心情、赚金币（每次 +5 金币）</p>
-      <button class="btn play" data-visit="park">🌳 去公园散步</button>`;
-  } else if (sc.key === 'shop') {
-    actions = `<p>前往商城采购道具与装扮</p>
-      <button class="btn feed" data-goto="shop">🛒 进入商城</button>
-      <button class="btn" data-visit="shop">📍 到访商店</button>`;
-  }
-  detail.innerHTML = `<h3>${sc.emoji} ${sc.name}</h3>${actions}
-    <button class="btn reset small" id="closeScene">返回地图</button>`;
-  detail.querySelectorAll('[data-act]').forEach(b => b.addEventListener('click', async () => {
-    await doAct(b.dataset.act); renderSceneDetail();
-  }));
-  detail.querySelectorAll('[data-visit]').forEach(b => b.addEventListener('click', async () => {
-    await doAct('visit', { scene: b.dataset.visit }); renderTown(); renderSceneDetail();
-  }));
-  detail.querySelectorAll('[data-goto]').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.goto)));
-  $('closeScene').addEventListener('click', () => { openScene = null; detail.classList.add('hidden'); });
+function renderSchool(s) {
+  $('schoolHint').textContent = s.visitedScenes?.includes('school') ? '✅ 已到访过学校' : '';
+}
+function renderPark(s) {
+  $('parkHint').textContent = s.visitedScenes?.includes('park') ? '✅ 已到访过公园' : '';
 }
 
 // —— 渲染：商城 ——
@@ -139,7 +107,6 @@ function renderShop() {
     card.querySelector('[data-buy]').addEventListener('click', async () => { await doAct('buy', { itemId: it.id }); renderShop(); });
     grid.appendChild(card);
   });
-  // 背包
   const inv = $('inventory');
   inv.innerHTML = '';
   const owned = Object.entries(state.inventory).filter(([, n]) => n > 0);
@@ -160,7 +127,7 @@ function renderShop() {
   });
 }
 
-// —— 渲染：任务 / 成就 ——
+// —— 渲染：任务 / 成就（面板）——
 function renderTasks() {
   const list = $('taskList');
   list.innerHTML = '';
@@ -175,7 +142,6 @@ function renderTasks() {
     el.querySelector('[data-claim]')?.addEventListener('click', async () => { await doAct('claimTask', { taskId: t.id }); renderTasks(); });
     list.appendChild(el);
   });
-
   const ach = $('achList');
   ach.innerHTML = '';
   CATALOG.achievements.forEach(a => {
@@ -190,21 +156,52 @@ function renderTasks() {
   });
 }
 
-// —— 全局状态缓存（用于渲染场景/商城/任务里的引用）——
-let state = null;
-
+// —— 总渲染 ——
 function renderAll(s) {
   state = s;
   const adopted = s.adopted;
   $('adoptScreen').classList.toggle('hidden', adopted);
-  ['home', 'town', 'shop', 'tasks'].forEach(t => {
-    $('view-' + t).classList.toggle('hidden', !(adopted && currentTab === t));
-  });
+  $('locationbar').classList.toggle('hidden', !adopted);
+  $('stage').classList.toggle('hidden', !adopted);
   if (!adopted) { renderAdopt(); return; }
-  renderHome(s);
-  if (currentTab === 'town') renderTown();
-  if (currentTab === 'shop') renderShop();
-  if (currentTab === 'tasks') renderTasks();
+  renderWallet(s);
+  renderPetSprite(s);
+  renderCurrent();
+  if (tasksOpen) renderTasks();
+}
+
+function renderCurrent() {
+  if (currentLoc === 'home') renderHome(state);
+  else if (currentLoc === 'hospital') renderHospital(state);
+  else if (currentLoc === 'school') renderSchool(state);
+  else if (currentLoc === 'park') renderPark(state);
+  else if (currentLoc === 'shop') renderShop(state);
+}
+
+// —— 地点切换（PPT 式转场 + 宠物进场景）——
+function switchLocation(loc) {
+  if (loc === currentLoc) { renderCurrent(); return; }
+  const oldEl = $('loc-' + currentLoc);
+  const nextEl = $('loc-' + loc);
+  const stage = $('stage');
+  stage.classList.add('switching');
+  oldEl.classList.add('leaving');
+  setTimeout(() => {
+    oldEl.classList.add('hidden');
+    oldEl.classList.remove('leaving');
+    nextEl.classList.remove('hidden');
+    // 宠物随新场景"走进来"
+    const spr = nextEl.querySelector('[data-sprite]');
+    if (spr) {
+      spr.classList.remove('enter', 'hop', 'walk');
+      void spr.offsetWidth; // 强制重排以重启动画
+      spr.classList.add('enter', petAnimClass(state));
+    }
+    stage.classList.remove('switching');
+    currentLoc = loc;
+    document.querySelectorAll('.loc').forEach(b => b.classList.toggle('active', b.dataset.loc === loc));
+    renderCurrent();
+  }, 220);
 }
 
 function showBanner(msg) {
@@ -223,23 +220,31 @@ async function doAct(action, extra = {}) {
   }
 }
 
-// —— Tab 切换 ——
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
-  renderAll(state);
-}
-
 // —— 事件绑定 ——
-$('tabbar').addEventListener('click', (e) => {
-  const t = e.target.closest('.tab');
-  if (t) switchTab(t.dataset.tab);
+$('locationbar').addEventListener('click', (e) => {
+  const b = e.target.closest('.loc');
+  if (b) switchLocation(b.dataset.loc);
 });
+$('btnTasks').addEventListener('click', () => {
+  tasksOpen = !tasksOpen;
+  $('taskPanel').classList.toggle('hidden', !tasksOpen);
+  if (tasksOpen) renderTasks();
+});
+$('closeTasks').addEventListener('click', () => { tasksOpen = false; $('taskPanel').classList.add('hidden'); });
+
+// 场景内的动作按钮（就医/上课/到访等）走事件委托
+$('stage').addEventListener('click', (e) => {
+  const actBtn = e.target.closest('[data-act]');
+  if (actBtn) { doAct(actBtn.dataset.act); return; }
+  const visBtn = e.target.closest('[data-visit]');
+  if (visBtn) { doAct('visit', { scene: visBtn.dataset.visit }); return; }
+});
+
 $('btnAdopt').addEventListener('click', async () => {
   const sp = window.__selectedSpecies;
   if (!sp) { showBanner('请先选择一只宠物🐾'); return; }
   const name = $('adoptName').value.trim();
-  try { const d = await act('adopt', { species: sp, name }); renderAll(d.pet); } catch (e) { showBanner('⚠️ ' + e.message); }
+  try { const d = await act('adopt', { species: sp, name }); renderAll(d.pet); switchLocation('home'); } catch (e) { showBanner('⚠️ ' + e.message); }
 });
 $('btnFeed').addEventListener('click', () => doAct('feed'));
 $('btnPlay').addEventListener('click', () => doAct('play'));
