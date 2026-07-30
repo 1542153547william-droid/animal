@@ -54,6 +54,7 @@ const server = http.createServer(async (req, res) => {
   fs.createReadStream(file).pipe(res);
 });
 
-server.listen(PORT, () => {
+// 只监听本机回环地址，避免触发公司防火墙"允许入站"弹窗
+server.listen(PORT, '127.0.0.1', () => {
   console.log(`🐾 萌宠小镇本地运行中：http://localhost:${PORT}`);
 });

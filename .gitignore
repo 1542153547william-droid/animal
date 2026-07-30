@@ -1,0 +1,9 @@
+# 依赖
+node_modules/
+
+# 日志
+*.log
+
+# 本地环境
+.env
+.env.local

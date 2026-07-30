@@ -9,48 +9,90 @@
 <body>
   <main class="app">
     <div id="banner" class="banner hidden"></div>
+
     <header class="topbar">
       <h1>🏡 萌宠小镇</h1>
-      <p class="subtitle">养一只属于你的小镇萌宠 · MVP 骨架</p>
+      <p class="subtitle">养一只属于你的小镇萌宠</p>
     </header>
 
-    <!-- 小镇背景装饰 -->
-    <div class="town" aria-hidden="true">
-      <span>🌳</span><span>🏠</span><span>🌸</span><span>⛲</span><span>🌲</span><span>🏪</span>
+    <!-- 顶部导航 -->
+    <nav class="tabbar" id="tabbar">
+      <button class="tab active" data-tab="home">🏠 家</button>
+      <button class="tab" data-tab="town">🏘️ 小镇</button>
+      <button class="tab" data-tab="shop">🛒 商城</button>
+      <button class="tab" data-tab="tasks">📋 任务</button>
+    </nav>
+
+    <!-- 钱包栏 -->
+    <div class="wallet" id="wallet">
+      <span>💰 <b id="gold">0</b></span>
+      <span>💎 <b id="diamond">0</b></span>
+      <span>🪙 <b id="token">0</b></span>
+      <span class="lv">用户 Lv.<b id="ulevel">1</b></span>
     </div>
 
-    <!-- 宠物卡片 -->
-    <section class="pet-card">
-      <div class="pet-avatar" id="petAvatar">🐱</div>
-      <div class="pet-meta">
-        <input id="petName" class="pet-name" maxlength="12" value="小喵" />
-        <div class="pet-level">等级 <span id="petLevel">1</span> · 已照顾 <span id="careCount">0</span> 次</div>
-        <div class="pet-mood" id="petMood">心情不错～</div>
+    <!-- 领养屏 -->
+    <section id="adoptScreen" class="hidden">
+      <h2 class="sec-title">🐾 欢迎来到萌宠小镇，先领养一只伙伴吧</h2>
+      <div id="speciesCards" class="species-grid"></div>
+      <div class="name-row">
+        <label>给TA起个名字：</label>
+        <input id="adoptName" class="pet-name" maxlength="12" placeholder="例如：团子" />
       </div>
+      <button id="btnAdopt" class="btn adopt">确认领养 🏡</button>
     </section>
 
-    <!-- 状态条 -->
-    <section class="stats">
-      <div class="stat">
-        <label>🍚 饱食度</label>
-        <div class="bar"><span id="barSatiety" class="fill satiety"></span></div>
+    <!-- 家（养成） -->
+    <section id="view-home" class="view hidden">
+      <div class="town" aria-hidden="true">
+        <span>🌳</span><span>🏠</span><span>🌸</span><span>⛲</span><span>🌲</span><span>🏪</span>
       </div>
-      <div class="stat">
-        <label>😊 心情</label>
-        <div class="bar"><span id="barHappiness" class="fill happiness"></span></div>
-      </div>
-      <div class="stat">
-        <label>⚡ 精力</label>
-        <div class="bar"><span id="barEnergy" class="fill energy"></span></div>
-      </div>
+      <section class="pet-card">
+        <div class="pet-avatar" id="petAvatar">🐱</div>
+        <div class="pet-meta">
+          <input id="petName" class="pet-name" maxlength="12" value="小喵" />
+          <div class="pet-level">亲密度 Lv.<span id="petLevel">1</span> · 已照顾 <span id="careCount">0</span> 次</div>
+          <div class="pet-mood" id="petMood">心情不错～</div>
+          <div class="room" id="room"></div>
+        </div>
+      </section>
+      <section class="stats">
+        <div class="stat"><label>🍚 饱食度</label><div class="bar"><span id="barSatiety" class="fill satiety"></span></div></div>
+        <div class="stat"><label>🛁 清洁度</label><div class="bar"><span id="barCleanliness" class="fill cleanliness"></span></div></div>
+        <div class="stat"><label>😊 心情</label><div class="bar"><span id="barHappiness" class="fill happiness"></span></div></div>
+        <div class="stat"><label>❤️ 健康度</label><div class="bar"><span id="barHealth" class="fill health"></span></div></div>
+      </section>
+      <section class="actions">
+        <button id="btnFeed" class="btn feed">🍖 喂食</button>
+        <button id="btnPlay" class="btn play">🎾 玩耍</button>
+        <button id="btnBathe" class="btn bathe">🛁 洗澡</button>
+        <button id="btnSleep" class="btn sleep">😴 睡觉</button>
+        <button id="btnHeal" class="btn heal">💊 就医</button>
+        <button id="btnReset" class="btn reset">🔄 放生重领</button>
+      </section>
     </section>
 
-    <!-- 操作按钮 -->
-    <section class="actions">
-      <button id="btnFeed" class="btn feed">🍖 喂食</button>
-      <button id="btnPlay" class="btn play">🎾 玩耍</button>
-      <button id="btnSleep" class="btn sleep">😴 睡觉</button>
-      <button id="btnReset" class="btn reset">🔄 重置</button>
+    <!-- 小镇四场景 -->
+    <section id="view-town" class="view hidden">
+      <h2 class="sec-title">🏘️ 小镇地图</h2>
+      <div id="sceneCards" class="scene-grid"></div>
+      <div id="sceneDetail" class="scene-detail hidden"></div>
+    </section>
+
+    <!-- 商城 -->
+    <section id="view-shop" class="view hidden">
+      <h2 class="sec-title">🛒 商城</h2>
+      <div id="shopGrid" class="shop-grid"></div>
+      <h3 class="sub-sec">🎒 我的背包</h3>
+      <div id="inventory" class="inv-grid"></div>
+    </section>
+
+    <!-- 任务 / 成就 -->
+    <section id="view-tasks" class="view hidden">
+      <h2 class="sec-title">📋 每日任务</h2>
+      <div id="taskList" class="task-list"></div>
+      <h3 class="sub-sec">🏆 成就</h3>
+      <div id="achList" class="ach-list"></div>
     </section>
 
     <footer class="foot">
