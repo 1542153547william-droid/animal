@@ -25,6 +25,30 @@ const shopItem = (id) => CATALOG.shop.find(x => x.id === id);
 // 不同物种进场景的动画：兔子跳，猫狗走
 const petAnimClass = (s) => (s.species === 'rabbit' ? 'hop' : 'walk');
 
+// 照料动作 → 特效（宠物反应 + 漂浮表情）
+const CARE_FX = {
+  feed:  { emoji: '🍖', react: 'react-eat' },
+  play:  { emoji: '🎾', react: 'react-bounce' },
+  bathe: { emoji: '🫧', react: 'react-bubbles' },
+  sleep: { emoji: '💤', react: 'react-sleep' },
+  heal:  { emoji: '💊', react: 'react-heal' },
+};
+function playCareEffect(action) {
+  const fx = CARE_FX[action];
+  if (!fx) return;
+  const spr = document.querySelector('#loc-' + currentLoc + ' [data-sprite]');
+  if (!spr) return;
+  spr.classList.remove(fx.react);
+  void spr.offsetWidth; // 重启动画
+  spr.classList.add(fx.react);
+  setTimeout(() => spr.classList.remove(fx.react), 950);
+  const f = document.createElement('div');
+  f.className = 'fx-float';
+  f.textContent = fx.emoji;
+  spr.parentElement.appendChild(f);
+  setTimeout(() => f.remove(), 1000);
+}
+
 // —— 渲染：领养屏 ——
 function renderAdopt() {
   const wrap = $('speciesCards');
@@ -235,7 +259,11 @@ $('closeTasks').addEventListener('click', () => { tasksOpen = false; $('taskPane
 // 场景内的动作按钮（就医/上课/到访等）走事件委托
 $('stage').addEventListener('click', (e) => {
   const actBtn = e.target.closest('[data-act]');
-  if (actBtn) { doAct(actBtn.dataset.act); return; }
+  if (actBtn) {
+    const a = actBtn.dataset.act;
+    doAct(a).then(() => { if (CARE_FX[a]) playCareEffect(a); });
+    return;
+  }
   const visBtn = e.target.closest('[data-visit]');
   if (visBtn) { doAct('visit', { scene: visBtn.dataset.visit }); return; }
 });
@@ -246,11 +274,11 @@ $('btnAdopt').addEventListener('click', async () => {
   const name = $('adoptName').value.trim();
   try { const d = await act('adopt', { species: sp, name }); renderAll(d.pet); switchLocation('home'); } catch (e) { showBanner('⚠️ ' + e.message); }
 });
-$('btnFeed').addEventListener('click', () => doAct('feed'));
-$('btnPlay').addEventListener('click', () => doAct('play'));
-$('btnBathe').addEventListener('click', () => doAct('bathe'));
-$('btnSleep').addEventListener('click', () => doAct('sleep'));
-$('btnHeal').addEventListener('click', () => doAct('heal'));
+$('btnFeed').addEventListener('click', () => doAct('feed').then(() => playCareEffect('feed')));
+$('btnPlay').addEventListener('click', () => doAct('play').then(() => playCareEffect('play')));
+$('btnBathe').addEventListener('click', () => doAct('bathe').then(() => playCareEffect('bathe')));
+$('btnSleep').addEventListener('click', () => doAct('sleep').then(() => playCareEffect('sleep')));
+$('btnHeal').addEventListener('click', () => doAct('heal').then(() => playCareEffect('heal')));
 $('petName').addEventListener('change', (e) => doAct('rename', { name: e.target.value }));
 $('btnReset').addEventListener('click', async () => {
   if (confirm('确定要放生并重领吗？当前进度会清空。')) await doAct('reset');

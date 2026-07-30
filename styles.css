@@ -430,3 +430,47 @@ body {
 }
 .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .panel-head h2 { margin: 0; font-size: 17px; }
+
+/* —— 互动照料动画 —— */
+.loc-view { position: relative; }
+.fx-float {
+  position: absolute; left: 50%; top: 26%;
+  font-size: 34px; transform: translateX(-50%);
+  animation: floatUp 1s ease forwards; pointer-events: none; z-index: 5;
+}
+@keyframes floatUp {
+  0%   { opacity: 0; transform: translate(-50%, 12px) scale(0.6); }
+  30%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -42px) scale(1.15); }
+}
+.pet-sprite.react-eat     { animation: reactEat 0.9s ease; }
+.pet-sprite.react-bounce  { animation: reactBounce 0.9s ease; }
+.pet-sprite.react-bubbles { animation: reactBubbles 0.9s ease; }
+.pet-sprite.react-sleep   { animation: reactSleep 1.1s ease; }
+.pet-sprite.react-heal    { animation: reactHeal 0.9s ease; }
+@keyframes reactEat {
+  0%,100% { transform: none; }
+  30% { transform: scale(1.15) translateY(-4px) rotate(-6deg); }
+  60% { transform: scale(0.95); }
+}
+@keyframes reactBounce {
+  0%,100% { transform: none; }
+  25% { transform: translateY(-16px) scale(1.05); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-8px); }
+}
+@keyframes reactBubbles {
+  0%,100% { transform: none; }
+  50% { transform: translateY(-6px) scale(1.04); }
+}
+@keyframes reactSleep {
+  0%,100% { transform: none; filter: none; }
+  50% { transform: rotate(-4deg) scale(1.02); }
+}
+@keyframes reactHeal {
+  0%   { transform: translateX(0); }
+  20%  { transform: translateX(-6px) rotate(-4deg); }
+  40%  { transform: translateX(6px) rotate(4deg); }
+  60%  { transform: translateX(-4px); }
+  100% { transform: none; }
+}
