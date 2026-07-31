@@ -15,6 +15,10 @@ export const SPECIES = {
   cat:    { key:'cat',    name:'小猫',   emoji:'🐱', personality:'高冷傲娇', desc:'心情细腻、精力恢复慢、较独立',  decay:{ satiety:0.9, cleanliness:0.7, happiness:0.8, health:0.20 }, foods:[{name:'猫粮',emoji:'🥣'},{name:'小鱼干',emoji:'🐟'},{name:'三文鱼',emoji:'🍣'},{name:'鸡胸肉',emoji:'🍗'}] },
   dog:    { key:'dog',    name:'小狗',   emoji:'🐶', personality:'活泼忠诚', desc:'贪吃、饭量大消耗快、精力恢复快', decay:{ satiety:1.3, cleanliness:1.1, happiness:0.6, health:0.20 }, foods:[{name:'肉狗粮',emoji:'🦴'},{name:'排骨',emoji:'🍖'},{name:'鸡肉',emoji:'🍗'},{name:'牛肉',emoji:'🥩'}] },
   rabbit: { key:'rabbit', name:'小兔子', emoji:'🐰', personality:'胆小温柔', desc:'心情敏感易波动、需温柔陪伴',     decay:{ satiety:1.0, cleanliness:1.2, happiness:1.1, health:0.25 }, foods:[{name:'提摩西草',emoji:'🌿'},{name:'苜蓿草',emoji:'🌱'},{name:'蒲公英草',emoji:'🍃'},{name:'胡萝卜',emoji:'🥕'}] },
+  pig:      { key:'pig',      name:'小猪',   emoji:'🐷', personality:'贪吃贪睡', desc:'饭量大掉毛快、性格憨厚好养',   decay:{ satiety:1.2, cleanliness:1.3, happiness:0.7, health:0.20 }, foods:[{name:'猪饲料',emoji:'🌾'},{name:'蔬菜',emoji:'🥬'},{name:'苹果',emoji:'🍎'},{name:'剩饭',emoji:'🍚'}] },
+  guinea:   { key:'guinea',   name:'荷兰猪', emoji:'🐭', personality:'胆小爱叫', desc:'群居胆小、爱啃草、需补维C',   decay:{ satiety:1.1, cleanliness:1.0, happiness:1.0, health:0.25 }, foods:[{name:'提摩西草',emoji:'🌿'},{name:'苜蓿草',emoji:'🌱'},{name:'彩椒',emoji:'🫑'},{name:'VC片',emoji:'🟠'}] },
+  hamster:  { key:'hamster',  name:'仓鼠',   emoji:'🐹', personality:'夜行囤粮', desc:'夜行小宠、爱囤粮、需安静环境', decay:{ satiety:0.8, cleanliness:0.6, happiness:0.9, health:0.20 }, foods:[{name:'仓鼠粮',emoji:'🌾'},{name:'葵花籽',emoji:'🌻'},{name:'面包虫',emoji:'🐛'},{name:'苹果粒',emoji:'🍎'}] },
+  chinchilla:{ key:'chinchilla', name:'龙猫', emoji:'🐿️', personality:'毛厚怕热', desc:'毛厚蓬松、怕热需沙浴、胆小', decay:{ satiety:0.9, cleanliness:0.5, happiness:1.0, health:0.22 }, foods:[{name:'龙猫粮',emoji:'🌾'},{name:'提摩西草',emoji:'🌿'},{name:'苹果枝',emoji:'🍏'},{name:'葡萄干',emoji:'🍇'}] },
 };
 
 // —— 小镇四场景 ——
